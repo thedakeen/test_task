@@ -1,0 +1,361 @@
+basePath: /
+definitions:
+  data.Metadata:
+    properties:
+      current_page:
+        type: integer
+      first_page:
+        type: integer
+      last_page:
+        type: integer
+      page_size:
+        type: integer
+      total_records:
+        type: integer
+    type: object
+  data.Song:
+    description: Song data structure
+    properties:
+      created_at:
+        type: string
+      group:
+        type: string
+      id:
+        type: integer
+      link:
+        type: string
+      releaseDate:
+        type: string
+      song:
+        type: string
+      text:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  main.envelope:
+    additionalProperties: {}
+    type: object
+host: localhost:5000
+info:
+  contact: {}
+  description: API server for test task application
+  title: Music Library
+  version: 1.0.0
+paths:
+  /v1/song:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new song with its details fetched from an external API
+      parameters:
+      - description: Song and Group
+        in: body
+        name: song
+        required: true
+        schema:
+          properties:
+            group:
+              type: string
+            song:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Song added successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Validation errors
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: the server encountered a problem and could not process your
+            request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add a new song
+      tags:
+      - Songs
+  /v1/song/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a song by its ID
+      parameters:
+      - description: Song ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Song successfully deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Song not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a song
+      tags:
+      - Songs
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a song by its ID
+      parameters:
+      - description: Song ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved song
+          schema:
+            allOf:
+            - $ref: '#/definitions/main.envelope'
+            - properties:
+                song:
+                  $ref: '#/definitions/data.Song'
+              type: object
+        "404":
+          description: The requested resource could not be found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: The server encountered a problem and could not process your
+            request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a song by ID
+      tags:
+      - Songs
+    patch:
+      consumes:
+      - application/json
+      description: Updates an existing song's details by its ID
+      parameters:
+      - description: Song ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated song and group (optional)
+        in: body
+        name: song
+        schema:
+          properties:
+            group:
+              type: string
+            song:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Song updated successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Song not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Edit conflict or duplicate song
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Validation errors
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: the server encountered a problem and could not process your
+            request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a song
+      tags:
+      - Songs
+  /v1/song/{id}/lyrics:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the lyrics of a song with pagination by verse
+      parameters:
+      - description: Song ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 1
+        description: Number of verses per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Paginated song lyrics
+          schema:
+            allOf:
+            - $ref: '#/definitions/main.envelope'
+            - properties:
+                lyrics:
+                  items:
+                    type: string
+                  type: array
+                metadata:
+                  $ref: '#/definitions/data.Metadata'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Song not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get paginated lyrics of a song
+      tags:
+      - Songs
+  /v1/songs:
+    get:
+      consumes:
+      - application/json
+      description: Lists all songs with optional filters and pagination
+      parameters:
+      - description: Song name
+        in: query
+        name: song
+        type: string
+      - description: Group name
+        in: query
+        name: group
+        type: string
+      - description: Release date
+        in: query
+        name: releaseDate
+        type: string
+      - description: Text
+        in: query
+        name: text
+        type: string
+      - description: Link
+        in: query
+        name: link
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 5
+        description: Number of items per page
+        in: query
+        name: page_size
+        type: integer
+      - default: id
+        description: Sort by field
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of songs
+          schema:
+            allOf:
+            - $ref: '#/definitions/main.envelope'
+            - properties:
+                metadata:
+                  $ref: '#/definitions/data.Metadata'
+                songs:
+                  items:
+                    $ref: '#/definitions/data.Song'
+                  type: array
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: the server encountered a problem and could not process your
+            request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List songs with filters
+      tags:
+      - Songs
+swagger: "2.0"
